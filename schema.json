@@ -1,1 +1,1 @@
-{"$schema":"http:\/\/json-schema.org\/draft-04\/schema#","title":"salary","type":"object","properties":{"form created":{"type":"boolean"},"money":{"type":"integer"},"expense":{"type":"integer"},"category":{"type":"string"}},"required":["money","expense","category","form created"]}
+{"$schema":"http:\/\/json-schema.org\/draft-04\/schema#","title":"salary","type":"object","properties":{"money":{"type":"number"},"expense":{"type":"number"},"category":{"type":"number"}},"required":["expense","category","money"]}

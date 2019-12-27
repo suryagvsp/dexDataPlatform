@@ -74,7 +74,7 @@ public class DataSetServiceImp implements DataSetService {
 					String unqID = Hashing.sha256().hashString(hashId, StandardCharsets.UTF_8).toString();
 					eachData.setId(unqID);
 					dataSetRepository.save(eachData);
-					logger.info("Inserting new form :{}" , unqID);
+					logger.info("Inserting new form :{}" , eachData);
 				});
 			} else {
 				logger.info("datasetFromDB is not null : ");
@@ -223,7 +223,7 @@ public class DataSetServiceImp implements DataSetService {
 			throw new Exception(e);
 		}
 	}
-
+	
 	@SuppressWarnings("unchecked")
 	@Override
 	public Map<String, List<Map<?, ?>>> CSVfileRead(MultipartFile file, String dataSetName) throws Exception {
@@ -249,11 +249,13 @@ public class DataSetServiceImp implements DataSetService {
 			MappingIterator<Map<?, ?>> iterator = mapper.reader(Map.class).with(schema).readValues(files);
 			List<Map<?, ?>> cSVDatas = iterator.readAll();
 
-			File newFiles = new File("./product_invalid.json");
+			File newFiles = new File("product_invalid.json");
+			
 			for (Map<?, ?> map : cSVDatas) {
 				ObjectMapper newMapper = new ObjectMapper();
 				newMapper.writeValue(newFiles, map);
-
+				System.out.println(newFiles);
+				System.out.println("newMapper  : "  +newMapper);
 				String errorMsg = "";
 				try {
 					dataValidateTest();
@@ -304,3 +306,123 @@ public class DataSetServiceImp implements DataSetService {
 	}
 
 }
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+/*
+	@SuppressWarnings("unchecked")
+	@Override
+	public Map<String, List<Map<?, ?>>> CSVfileRead(MultipartFile file, String dataSetName) throws Exception {
+		Map<String, List<Map<?, ?>>> finalMap = new HashMap();
+		List<Map<?, ?>> success = null;
+		List<Map<?, ?>> failure = null;
+		try {
+			logger.info("Enter in CSVfileRead(.)");
+
+			String files = new String(file.getBytes());
+			logger.debug("files   " + files);
+
+			List<String> line = new ArrayList<String>(Arrays.asList(files.split("\n")));
+			String[] str = line.get(0).split(",");
+//			System.out.println("Line Size : " + line.size());
+//			System.out.println(line);
+
+			List<Map<String, Object>> response = new LinkedList<>();
+			success = new LinkedList<>();
+			failure = new LinkedList<>();
+			CsvMapper mapper = new CsvMapper();
+			CsvSchema schema = CsvSchema.emptySchema().withHeader();
+			MappingIterator<Map<String, Object>> iterator = mapper.reader(Map.class).with(schema).readValues(files);
+			int value = 1;
+			while (iterator.hasNext()) {
+				if (value == line.size()) {
+					break;
+				}
+				response.add(iterator.next());
+			}
+//			System.out.println("Resposne : " + response);
+
+			org.json.simple.JSONObject map = new org.json.simple.JSONObject();
+			org.json.simple.JSONArray arrayList = new org.json.simple.JSONArray();
+
+			try (FileWriter jsonFile = new FileWriter("product_invalid.json")) {
+
+				for (Map<String, Object> data : response) {
+					arrayList.add(data);
+					String tempStr = arrayList.toJSONString();
+					if (StringUtils.isNotBlank(tempStr)) {
+						tempStr = tempStr.trim().substring(1, tempStr.length() - 1);
+					}
+
+					try {
+						(jsonFile).write(tempStr);
+						(jsonFile).flush();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					String errorMsg = "";
+					try {
+						dataValidateTest();
+						success.add(data);
+					} catch (Exception e) {
+						failure.add(data);
+						errorMsg = e.getMessage();
+						logger.error("Schema is not matching as per data set entered ", e.getCause());
+						// throw new Exception(e.getCause());
+
+					}
+				}
+
+				try {
+					List<FormDatasetRequest> formDataSetsReq = new LinkedList<>();
+					if (success != null && !success.isEmpty()) {
+						success.forEach(formData -> {
+							if (formData != null) {
+								FormDatasetRequest formDataSetReq = new FormDatasetRequest();
+								formDataSetReq.setDataSetName(dataSetName);
+								formData.forEach((fieldName, fieldValue) -> {
+//									formDataSetReq.setFieldName(fieldName);
+									formDataSetReq.setValue(fieldValue);
+								});
+								formDataSetsReq.add(formDataSetReq);
+							}
+						});
+					}
+
+					List<DataSet> dataSetList = dataSetRepository.findbyname(dataSetName);
+
+					List<FormDataSet> formDatasets = mapper(formDataSetsReq, dataSetList);
+
+					formDataSetRepository.saveAll(formDatasets);
+					logger.debug("Csv file has been saved successfully !!");
+				} catch (Exception ex) {
+					logger.error("Exception occurred at the time of fetching the data");
+				}
+			} catch (JsonGenerationException e) {
+				e.printStackTrace();
+			} catch (JsonMappingException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		finalMap.put("Success", success);
+		finalMap.put("Failure", failure);
+		return finalMap;
+
+	}
+
+}
+	*/

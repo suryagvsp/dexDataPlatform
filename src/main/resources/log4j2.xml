@@ -28,7 +28,7 @@
 			<AppenderRef ref="Console" />
 		</Logger>
 
-		<Root level="error">
+		<Root level="debug">
 			<AppenderRef ref="appLog" />
 		</Root>
 	</Loggers>
